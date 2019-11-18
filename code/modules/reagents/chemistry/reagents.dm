@@ -4,6 +4,28 @@
 //Toxin & acid reagents
 //Hydroponics stuff
 
+
+
+GLOBAL_LIST_INIT(name2reagent, build_name2reagent())
+GLOBAL_LIST_INIT(name2id, build_name2id())
+
+/proc/build_name2reagent()
+	. = list()
+	for (var/t in subtypesof(/datum/reagent))
+		var/datum/reagent/R = t
+
+		if (length(initial(R.name)))
+			.[ckey(initial(R.name))] = t //tg's way, for when we port the datum handling instead of ids
+
+/proc/build_name2id()
+	. = list()
+	for (var/t in subtypesof(/datum/reagent))
+		var/datum/reagent/R = t
+
+		if (length(initial(R.name)))
+			.[ckey(initial(R.name))] = ckey(initial(R.id))
+			//.[ckey(initial(R.name))] = t //tg's way, for when we port the datum handling instead of ids
+
 /datum/reagent
 	var/name = "Reagent"
 	var/id = "reagent"
@@ -43,7 +65,7 @@
 	var/inverse_chem_val 		= 0			// If the impurity is below 0.5, replace ALL of the chem with inverse_chemupon metabolising
 	var/inverse_chem					// What chem is metabolised when purity is below inverse_chem_val, this shouldn't be made, but if it does, well, I guess I'll know about it.
 	var/metabolizing = FALSE
-	var/chemical_flags // See fermi/readme.dm REAGENT_DEAD_PROCESS, REAGENT_DONOTSPLIT, REAGENT_ONLYINVERSE, REAGENT_ONMOBMERGE, REAGENT_INVISIBLE, REAGENT_FORCEONNEW, REAGENT_SNEAKYNAME
+	var/chemical_flags // See fermi/readme.dm REAGENT_DEAD_PROCESS, REAGENT_DONOTSPLIT, REAGENT_ONLYINVERSE, REAGENT_ONMOBMERGE, REAGENT_INVISIBLE, REAGENT_FORCEONNEW, REAGENT_SNEAKYNAME, NO_REACT
 	var/value = 0 //How much does it sell for in cargo?
 
 /datum/reagent/Destroy() // This should only be called by the holder, so it's already handled clearing its references
