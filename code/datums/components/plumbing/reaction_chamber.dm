@@ -25,10 +25,10 @@
 			if(RT.id == RD.id)
 				has_reagent = TRUE
 				if(RD.volume < RC.required_reagents[RTid])
-					process_request(min(RC.required_reagents[RTid] - RD.volume, MACHINE_REAGENT_TRANSFER) , RT, dir)
+					process_request(min(RC.required_reagents[RTid] - RD.volume, MACHINE_REAGENT_TRANSFER) , RT.id, dir)
 					return
 		if(!has_reagent)
-			process_request(min(RC.required_reagents[RT], MACHINE_REAGENT_TRANSFER), RT, dir)
+			process_request(min(RC.required_reagents[RT], MACHINE_REAGENT_TRANSFER), RT.id, dir)
 			return
 
 	RC.reagent_flags &= ~NO_REACT
