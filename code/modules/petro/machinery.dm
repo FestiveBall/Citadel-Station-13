@@ -10,6 +10,8 @@
 	use_power = NO_POWER_USE
 	circuit = /obj/item/circuitboard/machine/icg
 	var/active = 0 //duh
+	var/tank = 50 //stored fuel
+	var/reagent_flags
 
 /obj/machinery/power/gasgen/RefreshParts()
 	var/part_level = 0
@@ -33,11 +35,19 @@
 		STOP_PROCESSING(SSobj, src)
 		to_chat(user, "<span class='notice'>You shut down the [src].</span>")
 
+/obj/machinery/power/gasgen(obj/item/plunger/P, mob/living/user, reinforced)
+	to_chat(user, "<span class='notice'>You start furiously plunging [name].")
+	if(do_after(user, 30, target = src))
+		to_chat(user, "<span class='notice'>You finish plunging the [name].")
+		reagents.reaction(get_turf(src), TOUCH) //splash on the floor
+		reagents.clear_reagents()
 
-/obj/machinery/power/gasgen/Initialize(mapload)
+/obj/machinery/power/gasgen/Initialize(mapload, bolt = TRUE)
 	. = ..()
+	anchored = bolt
+	create_reagents(tank, reagent_flags)
 	AddComponent(/datum/component/plumbing/simple_demand)
-
+	AddComponent(/datum/component/simple_rotation, ROTATION_ALTCLICK | ROTATION_CLOCKWISE | ROTATION_COUNTERCLOCKWISE | ROTATION_VERBS )
 
 
 /obj/machinery/power/gasgen/wrench_act(mob/living/user, obj/item/I)
