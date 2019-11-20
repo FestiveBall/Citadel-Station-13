@@ -35,7 +35,7 @@
 		STOP_PROCESSING(SSobj, src)
 		to_chat(user, "<span class='notice'>You shut down the [src].</span>")
 
-/obj/machinery/power/gasgen(obj/item/plunger/P, mob/living/user, reinforced)
+/obj/machinery/power/gasgen/plunger_act(obj/item/plunger/P, mob/living/user, reinforced)
 	to_chat(user, "<span class='notice'>You start furiously plunging [name].")
 	if(do_after(user, 30, target = src))
 		to_chat(user, "<span class='notice'>You finish plunging the [name].")
