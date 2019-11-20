@@ -56,6 +56,7 @@
 	return TRUE
 
 /obj/machinery/power/gasgen/process()
+	..()
 	if(reagents.total_volume >= 1)
 		if(reagents.remove_reagent("gasoline", ICG_FUEL_TICK) || reagents.remove_reagent("diesel", ICG_FUEL_TICK))
 			add_avail(power_gen)
@@ -84,6 +85,7 @@
 	power_gen = initial(power_gen) * round(part_level/6)
 
 /obj/machinery/power/gasgen/stirling/process()
+	..()
 	if(reagents.total_volume >= 1)
 		if(reagents.remove_reagent("gasoline", STIRLING_FUEL_TICK) || reagents.remove_reagent("diesel", STIRLING_FUEL_TICK) || reagents.remove_reagent("kerosene", STIRLING_FUEL_TICK) || reagents.remove_reagent("butane", STIRLING_FUEL_TICK) ||reagents.remove_reagent("naptha", STIRLING_FUEL_TICK) || reagents.remove_reagent("fueloil", STIRLING_FUEL_TICK))
 			if(reagents.remove_reagent("water", ICG_FUEL_TICK))
