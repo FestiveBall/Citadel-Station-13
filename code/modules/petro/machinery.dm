@@ -134,6 +134,42 @@
 		STOP_PROCESSING(SSobj, src)
 		to_chat(user, "<span class='notice'>You close the main valve on [src].</span>")
 		heat = 293
+/*
+		icon_state = initial(icon_state)
+
+/obj/machinery/plumbing/distillator/ui_interact(mob/user, ui_key = "main", datum/tgui/ui = null, force_open = FALSE, datum/tgui/master_ui = null, datum/ui_state/state = GLOB.default_state)
+	ui = SStgui.try_update_ui(user, src, ui_key, ui, force_open)
+	if(!ui)
+		ui = new(user, src, ui_key, "reaction_chamber", name, 500, 300, master_ui, state)
+		ui.open()
+
+/obj/machinery/plumbing/distillator/ui_data(mob/user)
+	var/list/data = list()
+	var/list/text_reagents = list()
+	for(var/A in required_reagents) //make a list where the key is text, because that looks alot better in the ui than a typepath
+		var/datum/reagent/R = GLOB.chemical_reagents_list[A]
+		text_reagents[initial(R.name)] = required_reagents[R]
+
+	data["reagents"] = text_reagents
+	data["emptying"] = emptying
+	return data
+
+/obj/machinery/plumbing/distillator/ui_act(action, params)
+	if(..())
+		return
+	. = TRUE
+	switch(action)
+		if("remove")
+			var/reagent = get_chem_id(params["chem"])
+			if(reagent)
+				required_reagents.Remove(reagent)
+		if("add")
+			var/input_reagent = get_chem_id(input("Enter the name of the reagent", "Input") as text|null)
+			if(input_reagent && !required_reagents.Find(input_reagent))
+				var/input_amount = CLAMP(round(input("Enter amount", "Input") as num|null), 1, 100)
+				if(input_amount)
+					required_reagents[input_reagent] = input_amount
+*/
 
 /obj/machinery/power/distillator/process()
 	..()

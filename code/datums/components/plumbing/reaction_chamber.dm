@@ -18,16 +18,18 @@
 	if(RC.emptying || !LAZYLEN(RC.required_reagents))
 		return
 	for(var/RTid in RC.required_reagents)
+		var/datum/reagent/RT = GLOB.chemical_reagents_list[RTid]
 		var/has_reagent = FALSE
 		for(var/A in reagents.reagent_list)
 			var/datum/reagent/RD = A
-			if(RTid == RD.id)
+			if(RT.id == RD.id)
 				has_reagent = TRUE
 				if(RD.volume < RC.required_reagents[RTid])
-					process_request(min(RC.required_reagents[RTid] - RD.volume, MACHINE_REAGENT_TRANSFER) , RTid, dir)
+					process_request(min(RC.required_reagents[RTid] - RD.volume, MACHINE_REAGENT_TRANSFER) , RT.id, dir)
 					return
 		if(!has_reagent)
-			process_request(min(RC.required_reagents[RTid], MACHINE_REAGENT_TRANSFER), RTid, dir)
+			process_request(min(RC.required_reagents[RT], MACHINE_REAGENT_TRANSFER), RT.id, dir)
+
 			return
 
 	RC.reagent_flags &= ~NO_REACT
