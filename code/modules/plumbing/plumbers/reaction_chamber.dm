@@ -40,7 +40,7 @@
 	var/list/text_reagents = list()
 	for(var/A in required_reagents) //make a list where the key is text, because that looks alot better in the ui than a typepath
 		var/datum/reagent/R = GLOB.chemical_reagents_list[A]
-		text_reagents[initial(R.name)] = R.id
+		text_reagents[initial(R.name)] = required_reagents[A] //Name : Vol
 
 	data["reagents"] = text_reagents
 	data["emptying"] = emptying
@@ -52,12 +52,21 @@
 	. = TRUE
 	switch(action)
 		if("remove")
-			var/reagent = get_chem_id(params["chem"])
-			if(reagent)
-				required_reagents.Remove(reagent)
+			var/LL = required_reagents.len
+			LL =-1
+			if(LL > 1)
+				required_reagents.Cut(LL,0)
+			else if(LL == 0)
+				required_reagents.Cut(1,0)
+			else
+				return
 		if("add")
-			var/input_reagent = get_chem_id(input("Enter the name of the reagent", "Input") as text|null)
+			var/input_reagent = replacetext(lowertext(input("Enter the name of the reagent", "Input") as text), " ", "") //95% of the time, the reagent id is a lowercase/no spaces version of the nam
+			input_reagent = find_reagent(input_reagent)
+			if(!input_reagent || !GLOB.chemical_reagents_list[input_reagent])
+				say("Cannot find reagent in NanoTrasen database!")
+				return
 			if(input_reagent && !required_reagents.Find(input_reagent))
-				var/input_amount = CLAMP(round(input("Enter amount", "Input") as num|null), 1, 100)
+				var/input_amount = CLAMP(round(input("Enter amount", "Input") as num|null), 0.01, 100)
 				if(input_amount)
 					required_reagents[input_reagent] = input_amount

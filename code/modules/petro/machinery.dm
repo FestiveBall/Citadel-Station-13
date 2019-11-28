@@ -10,6 +10,8 @@
 	use_power = NO_POWER_USE
 	circuit = /obj/item/circuitboard/machine/icg
 	var/active = 0 //duh
+	var/tank = 50 //stored fuel
+	var/reagent_flags
 
 /obj/machinery/power/gasgen/RefreshParts()
 	var/part_level = 0
@@ -33,11 +35,19 @@
 		STOP_PROCESSING(SSobj, src)
 		to_chat(user, "<span class='notice'>You shut down the [src].</span>")
 
+/obj/machinery/power/gasgen/plunger_act(obj/item/plunger/P, mob/living/user, reinforced)
+	to_chat(user, "<span class='notice'>You start furiously plunging [name].")
+	if(do_after(user, 30, target = src))
+		to_chat(user, "<span class='notice'>You finish plunging the [name].")
+		reagents.reaction(get_turf(src), TOUCH) //splash on the floor
+		reagents.clear_reagents()
 
-/obj/machinery/power/gasgen/Initialize(mapload)
+/obj/machinery/power/gasgen/Initialize(mapload, bolt = TRUE)
 	. = ..()
+	anchored = bolt
+	create_reagents(tank, reagent_flags)
 	AddComponent(/datum/component/plumbing/simple_demand)
-
+	AddComponent(/datum/component/simple_rotation, ROTATION_ALTCLICK | ROTATION_CLOCKWISE | ROTATION_COUNTERCLOCKWISE | ROTATION_VERBS )
 
 
 /obj/machinery/power/gasgen/wrench_act(mob/living/user, obj/item/I)
@@ -46,6 +56,7 @@
 	return TRUE
 
 /obj/machinery/power/gasgen/process()
+	..()
 	if(reagents.total_volume >= 1)
 		if(reagents.remove_reagent("gasoline", ICG_FUEL_TICK) || reagents.remove_reagent("diesel", ICG_FUEL_TICK))
 			add_avail(power_gen)
@@ -54,7 +65,7 @@
 			STOP_PROCESSING(SSobj, src)
 			for(var/mob/living/M in viewers(get_turf(src), null))
 				M.visible_message("<span class='notice'>The [src] sputters, shudders and slides to a stop.</span>")
-			take_damage(20, BRUTE, "melee", 1) //dont let it run out of fuel, idiot. it'll misfire.
+			take_damage(20, BRUTE, "melee", 1) //dont let it run out of fuel, idiot. itll misfire.
 	return
 
 /obj/machinery/power/gasgen/stirling
@@ -74,6 +85,7 @@
 	power_gen = initial(power_gen) * round(part_level/6)
 
 /obj/machinery/power/gasgen/stirling/process()
+	..()
 	if(reagents.total_volume >= 1)
 		if(reagents.remove_reagent("gasoline", STIRLING_FUEL_TICK) || reagents.remove_reagent("diesel", STIRLING_FUEL_TICK) || reagents.remove_reagent("kerosene", STIRLING_FUEL_TICK) || reagents.remove_reagent("butane", STIRLING_FUEL_TICK) ||reagents.remove_reagent("naptha", STIRLING_FUEL_TICK) || reagents.remove_reagent("fueloil", STIRLING_FUEL_TICK))
 			if(reagents.remove_reagent("water", ICG_FUEL_TICK))
@@ -90,34 +102,39 @@
 #undef ICG_FUEL_TICK
 #undef STIRLING_FUEL_TICK
 
-/obj/machinery/plumbing/distillator
+/obj/machinery/power/distillator
 	name = "fractional distillation chamber"
 	desc = "Fractionally distillates chemicals using the power of science! And heat."
 	icon_state = "reaction_chamber"
+	var/tank = 400
+	var/reagent_flags = NO_REACT
+	var/active = FALSE
+	active_power_usage = 10000
+	idle_power_usage = 500
+	var/heat = 293
 
-	buffer = 400
-	reagent_flags = TRANSPARENT | NO_REACT
-	/**list of set reagents that the reaction_chamber allows in, and must all be present before mixing is enabled.
-	* example: list(/datum/reagent/water = 20, /datum/reagent/fuel/oil = 50)
-	*/
-	var/list/required_reagents = list()
-	///our reagent goal has been reached, so now we lock our inputs and start emptying
-	var/emptying = FALSE
-
-/obj/machinery/plumbing/distillator/Initialize(mapload, bolt)
+/obj/machinery/power/distillator/Initialize(mapload, bolt)
 	. = ..()
-	AddComponent(/datum/component/plumbing/reaction_chamber, bolt)
+	create_reagents(tank, reagent_flags)
+	AddComponent(/datum/component/plumbing/tank)
+	AddComponent(/datum/component/simple_rotation, ROTATION_ALTCLICK | ROTATION_CLOCKWISE | ROTATION_COUNTERCLOCKWISE | ROTATION_VERBS )
 
-/obj/machinery/plumbing/distillator/on_reagent_change()
-	if(reagents.total_volume == 0 && emptying) //we were emptying, but now we aren't
-		emptying = FALSE
-		reagent_flags |= NO_REACT
+/obj/machinery/power/distillator/examine(mob/user)
+	..()
+	to_chat(user, "<span class='notice'>The valve on [src] is [active ? "open":"closed"].</span>")
+	to_chat(user, "<span class='notice'>A small gauge displays the current temperature </span><span class='danger'>[heat]K.</span>")
 
-/obj/machinery/plumbing/distillator/power_change()
-	. = ..()
-	if(use_power != NO_POWER_USE)
-		icon_state = initial(icon_state) + "_on"
+/obj/machinery/power/distillator/attack_hand(mob/user)
+	if(!active)
+		active = TRUE
+		START_PROCESSING(SSobj, src)
+		to_chat(user, "<span class='notice'>You open the main valve on [src].</span>")
 	else
+		active = FALSE
+		STOP_PROCESSING(SSobj, src)
+		to_chat(user, "<span class='notice'>You close the main valve on [src].</span>")
+		heat = 293
+/*
 		icon_state = initial(icon_state)
 
 /obj/machinery/plumbing/distillator/ui_interact(mob/user, ui_key = "main", datum/tgui/ui = null, force_open = FALSE, datum/tgui/master_ui = null, datum/ui_state/state = GLOB.default_state)
@@ -152,7 +169,35 @@
 				var/input_amount = CLAMP(round(input("Enter amount", "Input") as num|null), 1, 100)
 				if(input_amount)
 					required_reagents[input_reagent] = input_amount
+*/
 
+/obj/machinery/power/distillator/process()
+	..()
+	if(avail(active_power_usage))
+		add_load(active_power_usage)
+		if(heat < 1593)
+		heat =+ 100
+	else
+		if(heat > 293)
+			heat =- 100
+	if((reagents.remove_reagent("crudeoil", 5) && reagents.remove_reagent("water", 1)) && heat > 993)
+		src.add_reagent("asphalt", 0.3)
+		src.add_reagent("fueloil", 0.3)
+		src.add_reagent("diesel", 0.2)
+		src.add_reagent("kerosene", 0.1)
+		src.add_reagent("naphtha", 0.05)
+		src.add_reagent("butane", 0.05)
+	else if((reagents.remove_reagent("crudeoil", 5) && reagents.remove_reagent("water", 1)) && heat > 1293)
+		src.add_reagent("asphalt", 0.35)
+		src.add_reagent("fueloil", 0.35)
+		src.add_reagent("diesel", 0.2)
+		src.add_reagent("kerosene", 0.05)
+		src.add_reagent("naphtha", 0.05)
+
+	else if((reagents.remove_reagent("crudeoil", 5) && reagents.remove_reagent("water", 1)) && heat > 1493)
+		src.add_reagent("asphalt", 0.3)
+		src.add_reagent("fueloil", 0.4)
+		src.add_reagent("diesel", 0.3)
 
 /obj/machinery/power/liquid_pump/oilrig
 	name = "oil drilling rig"

@@ -29,6 +29,7 @@
 					return
 		if(!has_reagent)
 			process_request(min(RC.required_reagents[RT], MACHINE_REAGENT_TRANSFER), RT.id, dir)
+
 			return
 
 	RC.reagent_flags &= ~NO_REACT

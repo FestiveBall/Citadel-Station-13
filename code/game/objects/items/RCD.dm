@@ -834,7 +834,9 @@ RLD
 /obj/item/construction/plumbing
 	name = "Plumbing Constructor"
 	desc = "An expertly modified RCD outfitted to construct plumbing machinery."
-	icon_state = "plumberer2"
+	icon_state = "arcd"
+	item_state = "oldrcd"
+	has_ammobar = FALSE
 	icon = 'icons/obj/tools.dmi'
 
 	matter = 200
