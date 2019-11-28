@@ -264,6 +264,27 @@
 	reqs = list(/obj/item/folder/paperwork = 1)
 	category = CAT_MISC
 
+/datum/crafting_recipe/plunger
+	name = "Plunger"
+	result = /obj/item/plunger
+	time = 10
+	reqs = list(
+		/obj/item/stack/sheet/mineral/wood = 2,
+		/obj/item/stack/sheet/plastic = 2
+	)
+	category = CAT_MISC
+
+/datum/crafting_recipe/rplunger
+	name = "Reinforced Plunger"
+	result = /obj/item/plunger/reinforced
+	time = 10
+	reqs = list(
+		/obj/item/plunger = 1,
+		/obj/item/stack/sheet/plasteel = 3
+	)
+	category = CAT_MISC
+
+
 //////////////
 //Banners/////
 //////////////

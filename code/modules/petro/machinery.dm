@@ -65,7 +65,7 @@
 			STOP_PROCESSING(SSobj, src)
 			for(var/mob/living/M in viewers(get_turf(src), null))
 				M.visible_message("<span class='notice'>The [src] sputters, shudders and slides to a stop.</span>")
-			take_damage(20, BRUTE, "melee", 1) //dont let it run out of fuel, idiot. it'll misfire.
+			take_damage(20, BRUTE, "melee", 1) //dont let it run out of fuel, idiot. itll misfire.
 	return
 
 /obj/machinery/power/gasgen/stirling
@@ -102,69 +102,66 @@
 #undef ICG_FUEL_TICK
 #undef STIRLING_FUEL_TICK
 
-/obj/machinery/plumbing/distillator
+/obj/machinery/power/distillator
 	name = "fractional distillation chamber"
 	desc = "Fractionally distillates chemicals using the power of science! And heat."
 	icon_state = "reaction_chamber"
+	var/tank = 400
+	var/reagent_flags = NO_REACT
+	var/active = FALSE
+	active_power_usage = 10000
+	idle_power_usage = 500
+	var/heat = 293
 
-	buffer = 400
-	reagent_flags = TRANSPARENT | NO_REACT
-	/**list of set reagents that the reaction_chamber allows in, and must all be present before mixing is enabled.
-	* example: list(/datum/reagent/water = 20, /datum/reagent/fuel/oil = 50)
-	*/
-	var/list/required_reagents = list()
-	///our reagent goal has been reached, so now we lock our inputs and start emptying
-	var/emptying = FALSE
-
-/obj/machinery/plumbing/distillator/Initialize(mapload, bolt)
+/obj/machinery/power/distillator/Initialize(mapload, bolt)
 	. = ..()
-	AddComponent(/datum/component/plumbing/reaction_chamber, bolt)
+	create_reagents(tank, reagent_flags)
+	AddComponent(/datum/component/plumbing/tank)
+	AddComponent(/datum/component/simple_rotation, ROTATION_ALTCLICK | ROTATION_CLOCKWISE | ROTATION_COUNTERCLOCKWISE | ROTATION_VERBS )
 
-/obj/machinery/plumbing/distillator/on_reagent_change()
-	if(reagents.total_volume == 0 && emptying) //we were emptying, but now we aren't
-		emptying = FALSE
-		reagent_flags |= NO_REACT
+/obj/machinery/power/distillator/examine(mob/user)
+	..()
+	to_chat(user, "<span class='notice'>The valve on [src] is [active ? "open":"closed"].</span>")
+	to_chat(user, "<span class='notice'>A small gauge displays the current temperature </span><span class='danger'>[heat]K.</span>")
 
-/obj/machinery/plumbing/distillator/power_change()
-	. = ..()
-	if(use_power != NO_POWER_USE)
-		icon_state = initial(icon_state) + "_on"
+/obj/machinery/power/distillator/attack_hand(mob/user)
+	if(!active)
+		active = TRUE
+		START_PROCESSING(SSobj, src)
+		to_chat(user, "<span class='notice'>You open the main valve on [src].</span>")
 	else
-		icon_state = initial(icon_state)
+		active = FALSE
+		STOP_PROCESSING(SSobj, src)
+		to_chat(user, "<span class='notice'>You close the main valve on [src].</span>")
+		heat = 293
 
-/obj/machinery/plumbing/distillator/ui_interact(mob/user, ui_key = "main", datum/tgui/ui = null, force_open = FALSE, datum/tgui/master_ui = null, datum/ui_state/state = GLOB.default_state)
-	ui = SStgui.try_update_ui(user, src, ui_key, ui, force_open)
-	if(!ui)
-		ui = new(user, src, ui_key, "reaction_chamber", name, 500, 300, master_ui, state)
-		ui.open()
+/obj/machinery/power/distillator/process()
+	..()
+	if(avail(active_power_usage))
+		add_load(active_power_usage)
+		if(heat < 1593)
+		heat =+ 100
+	else
+		if(heat > 293)
+			heat =- 100
+	if((reagents.remove_reagent("crudeoil", 5) && reagents.remove_reagent("water", 1)) && heat > 993)
+		src.add_reagent("asphalt", 0.3)
+		src.add_reagent("fueloil", 0.3)
+		src.add_reagent("diesel", 0.2)
+		src.add_reagent("kerosene", 0.1)
+		src.add_reagent("naphtha", 0.05)
+		src.add_reagent("butane", 0.05)
+	else if((reagents.remove_reagent("crudeoil", 5) && reagents.remove_reagent("water", 1)) && heat > 1293)
+		src.add_reagent("asphalt", 0.35)
+		src.add_reagent("fueloil", 0.35)
+		src.add_reagent("diesel", 0.2)
+		src.add_reagent("kerosene", 0.05)
+		src.add_reagent("naphtha", 0.05)
 
-/obj/machinery/plumbing/distillator/ui_data(mob/user)
-	var/list/data = list()
-	var/list/text_reagents = list()
-	for(var/A in required_reagents) //make a list where the key is text, because that looks alot better in the ui than a typepath
-		var/datum/reagent/R = GLOB.chemical_reagents_list[A]
-		text_reagents[initial(R.name)] = required_reagents[R]
-
-	data["reagents"] = text_reagents
-	data["emptying"] = emptying
-	return data
-
-/obj/machinery/plumbing/distillator/ui_act(action, params)
-	if(..())
-		return
-	. = TRUE
-	switch(action)
-		if("remove")
-			var/reagent = get_chem_id(params["chem"])
-			if(reagent)
-				required_reagents.Remove(reagent)
-		if("add")
-			var/input_reagent = get_chem_id(input("Enter the name of the reagent", "Input") as text|null)
-			if(input_reagent && !required_reagents.Find(input_reagent))
-				var/input_amount = CLAMP(round(input("Enter amount", "Input") as num|null), 1, 100)
-				if(input_amount)
-					required_reagents[input_reagent] = input_amount
-
+	else if((reagents.remove_reagent("crudeoil", 5) && reagents.remove_reagent("water", 1)) && heat > 1493)
+		src.add_reagent("asphalt", 0.3)
+		src.add_reagent("fueloil", 0.4)
+		src.add_reagent("diesel", 0.3)
 
 /obj/machinery/power/liquid_pump/oilrig
 	name = "oil drilling rig"
