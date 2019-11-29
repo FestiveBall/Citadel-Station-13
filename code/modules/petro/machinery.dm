@@ -176,28 +176,28 @@
 	if(avail(active_power_usage))
 		add_load(active_power_usage)
 		if(heat < 1593)
-		heat =+ 100
+			heat += 100
 	else
 		if(heat > 293)
-			heat =- 100
+			heat -= 100
 	if((reagents.remove_reagent("crudeoil", 5) && reagents.remove_reagent("water", 1)) && heat > 993)
-		src.add_reagent("asphalt", 0.3)
-		src.add_reagent("fueloil", 0.3)
-		src.add_reagent("diesel", 0.2)
-		src.add_reagent("kerosene", 0.1)
-		src.add_reagent("naphtha", 0.05)
-		src.add_reagent("butane", 0.05)
+		reagents.add_reagent("asphalt", 0.3)
+		reagents.add_reagent("fueloil", 0.3)
+		reagents.add_reagent("diesel", 0.2)
+		reagents.add_reagent("kerosene", 0.1)
+		reagents.add_reagent("naphtha", 0.05)
+		reagents.add_reagent("butane", 0.05)
 	else if((reagents.remove_reagent("crudeoil", 5) && reagents.remove_reagent("water", 1)) && heat > 1293)
-		src.add_reagent("asphalt", 0.35)
-		src.add_reagent("fueloil", 0.35)
-		src.add_reagent("diesel", 0.2)
-		src.add_reagent("kerosene", 0.05)
-		src.add_reagent("naphtha", 0.05)
+		reagents.add_reagent("asphalt", 0.35)
+		reagents.add_reagent("fueloil", 0.35)
+		reagents.add_reagent("diesel", 0.2)
+		reagents.add_reagent("kerosene", 0.05)
+		reagents.add_reagent("naphtha", 0.05)
 
 	else if((reagents.remove_reagent("crudeoil", 5) && reagents.remove_reagent("water", 1)) && heat > 1493)
-		src.add_reagent("asphalt", 0.3)
-		src.add_reagent("fueloil", 0.4)
-		src.add_reagent("diesel", 0.3)
+		reagents.add_reagent("asphalt", 0.3)
+		reagents.add_reagent("fueloil", 0.4)
+		reagents.add_reagent("diesel", 0.3)
 
 /obj/machinery/power/liquid_pump/oilrig
 	name = "oil drilling rig"

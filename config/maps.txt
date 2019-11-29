@@ -41,6 +41,7 @@ endmap
 
 
 map gabbylayout
+endmap
 
 map multiz_debug
 
