@@ -233,8 +233,9 @@
 		H = owner
 	//If they have arousal off
 	if(!H.canbearoused)
-		H.client?.prefs.lewdchem = FALSE
-		isLewd = TRUE
+		if(H.client?.prefs.lewdchem)
+			H.client?.prefs.lewdchem = FALSE
+			isLewd = TRUE
 
 	switch(source)
 		//from MKUltra
