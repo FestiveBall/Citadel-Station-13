@@ -1,5 +1,7 @@
 #define DICK_MOVEMENT_SPEED "hugedick"
 #define BREAST_MOVEMENT_SPEED "megamilk"
+#define MKULTRA_CHEM	"MKUltraChem"
+#define MKULTRA_VAMP	"MKUltraVamp"
 
 /datum/status_effect/chem/SGDF
 	id = "SGDF"
@@ -220,24 +222,77 @@
 	var/customEcho	//Custom looping text in owner
 	var/customSpan	//Custom spans for looping text
 
+	var/isLewd = FALSE //Checks to see if they're lewdchem to restore after completion
+	var/status_source
+
+/datum/status_effect/chem/enthrall/on_creation(mob/living/carbon/thrall, source, mob/living/carbon/enthraller)
+	.=..()
+	status_source = source
+	var/mob/living/carbon/human/H = thrall
+	if(!H)
+		H = owner
+	//If they have arousal off
+	if(!H.canbearoused)
+		H.client?.prefs.lewdchem = FALSE
+		isLewd = TRUE
+
+	switch(source)
+		//from MKUltra
+		if(MKULTRA_CHEM)
+			//find the chem and rip the vars
+			var/datum/reagent/fermi/enthrall/E = locate(/datum/reagent/fermi/enthrall) in H.reagents.reagent_list
+			if(!E)
+				message_admins("WARNING: FermiChem: No master found in thrall, did you bus in the status? You need to set up the vars manually in the chem if it's not reacted/bussed. Someone set up the reaction/status proc incorrectly if not (Don't use donor blood). Console them with a chemcat plush maybe?")
+				owner.remove_status_effect(src)
+				return FALSE
+			enthrallID = E.creatorID
+			enthrallGender = E.creatorGender
+			master = get_mob_by_key(enthrallID)
+			return TRUE
+
+		//from Vampires
+		if(MKULTRA_VAMP)
+			if(!enthraller)
+				message_admins("WARNING: MKUltra. No enthraller passed to vampiric status effect on call. Unable to create status.")
+				owner.remove_status_effect(src)
+				return FALSE
+			master = enthraller
+			enthrallID = master.ckey
+			if (master.gender == "female")
+				enthrallGender = "Mistress"
+			else
+				enthrallGender = "Master"
+
+			//Status is nonlewd
+			if(H.client?.prefs.lewdchem)
+				H.client?.prefs.lewdchem = FALSE
+				isLewd = TRUE
+
+			return TRUE
+
+	//If we're not from either, find anything applicable.
+	if(enthraller)
+		master = enthraller
+		enthrallID = master.ckey
+		if (master.gender == "female")
+			enthrallGender = "Mistress"
+		else
+			enthrallGender = "Master"
+		return TRUE
+	var/datum/reagent/fermi/enthrall/E = locate(/datum/reagent/fermi/enthrall) in H.reagents.reagent_list
+	if(E)
+		enthrallID = E.creatorID
+		enthrallGender = E.creatorGender
+		master = get_mob_by_key(enthrallID)
+		return TRUE
+	return FALSE
+
+
 /datum/status_effect/chem/enthrall/on_apply()
 	var/mob/living/carbon/M = owner
-	var/datum/reagent/fermi/enthrall/E = locate(/datum/reagent/fermi/enthrall) in M.reagents.reagent_list
-	if(!E)
-		message_admins("WARNING: FermiChem: No master found in thrall, did you bus in the status? You need to set up the vars manually in the chem if it's not reacted/bussed. Someone set up the reaction/status proc incorrectly if not (Don't use donor blood). Console them with a chemcat plush maybe?")
-		owner.remove_status_effect(src)
-	enthrallID = E.creatorID
-	enthrallGender = E.creatorGender
-	master = get_mob_by_key(enthrallID)
-	//if(M.ckey == enthrallID)
-	//	owner.remove_status_effect(src)//At the moment, a user can enthrall themselves, toggle this back in if that should be removed.
 	RegisterSignal(owner, COMSIG_LIVING_RESIST, .proc/owner_resist) //Do resistance calc if resist is pressed#
 	RegisterSignal(owner, COMSIG_MOVABLE_HEAR, .proc/owner_hear)
 	mental_capacity = 500 - M.getOrganLoss(ORGAN_SLOT_BRAIN)//It's their brain!
-	var/mob/living/carbon/human/H = owner
-	if(H)//Prefs
-		if(!H.canbearoused)
-			H.client?.prefs.lewdchem = FALSE
 	var/message = "[(owner.client?.prefs.lewdchem?"I am a good pet for [enthrallGender].":"[master] is a really inspirational person!")]"
 	SEND_SIGNAL(M, COMSIG_ADD_MOOD_EVENT, "enthrall", /datum/mood_event/enthrall, message)
 	to_chat(owner, "<span class='[(owner.client?.prefs.lewdchem?"big velvet":"big warning")]'><b>You feel inexplicably drawn towards [master], their words having a demonstrable effect on you. It seems the closer you are to them, the stronger the effect is. However you aren't fully swayed yet and can resist their effects by repeatedly resisting as much as you can!</b></span>")
@@ -249,11 +304,12 @@
 	var/mob/living/carbon/M = owner
 
 	//chem calculations
-	if(!owner.reagents.has_reagent("enthrall") && !owner.reagents.has_reagent("enthrallTest"))
-		if (phase < 3 && phase != 0)
-			deltaResist += 3//If you've no chem, then you break out quickly
-			if(prob(5))
-				to_chat(owner, "<span class='notice'><i>Your mind starts to restore some of it's clarity as you feel the effects of the drug wain.</i></span>")
+	if(status_source = MKULTRA_CHEM)
+		if(!owner.reagents.has_reagent("enthrall") && !owner.reagents.has_reagent("enthrallTest"))
+			if (phase < 3 && phase != 0)
+				deltaResist += 3//If you've no chem, then you break out quickly
+				if(prob(5))
+					to_chat(owner, "<span class='notice'><i>Your mind starts to restore some of it's clarity as you feel the effects of the drug wain.</i></span>")
 	if (mental_capacity <= 500 || phase == 4)
 		if (owner.reagents.has_reagent("mannitol"))
 			mental_capacity += 5
@@ -574,6 +630,8 @@
 	REMOVE_TRAIT(owner, TRAIT_PACIFISM, "MKUltra")
 	to_chat(owner, "<span class='big redtext'><i>You're now free of [master]'s influence, and fully independent!'</i></span>")
 	UnregisterSignal(owner, COMSIG_GLOB_LIVING_SAY_SPECIAL)
+	if(isLewd) //if we disabled it on apply.
+		M.client?.prefs.lewdchem = TRUE
 
 
 /datum/status_effect/chem/enthrall/proc/owner_hear(var/hearer, message, atom/movable/speaker, message_language, raw_message, radio_freq, list/spans, message_mode)

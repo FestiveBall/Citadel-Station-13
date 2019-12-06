@@ -197,7 +197,7 @@ Creating a chem with a low purity will make you permanently fall in love with so
 		to_chat(M, "<span class='notice'><i>You feel your vocal chords tingle as your voice comes out in a more sultry tone.</span>")
 	else
 		log_game("FERMICHEM: MKUltra: [creatorName], [creatorID], is enthralling [M.name], [M.ckey]")
-		M.apply_status_effect(/datum/status_effect/chem/enthrall)
+		M.apply_status_effect(/datum/status_effect/chem/enthrall, MKULTRA_CHEM)
 	log_game("FERMICHEM: [M] ckey: [M.key] has taken MKUltra")
 
 /datum/reagent/fermi/enthrall/on_mob_life(mob/living/carbon/M)
@@ -273,7 +273,7 @@ Creating a chem with a low purity will make you permanently fall in love with so
 	ADD_TRAIT(M, TRAIT_PACIFISM, "MKUltra")
 	var/datum/status_effect/chem/enthrall/E
 	if (!M.has_status_effect(/datum/status_effect/chem/enthrall))
-		M.apply_status_effect(/datum/status_effect/chem/enthrall)
+		M.apply_status_effect(/datum/status_effect/chem/enthrall, MKULTRA_CHEM)
 		E = M.has_status_effect(/datum/status_effect/chem/enthrall)
 		E.enthrallID = creatorID
 		E.enthrallGender = creatorGender
