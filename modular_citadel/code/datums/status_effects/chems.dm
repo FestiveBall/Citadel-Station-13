@@ -636,7 +636,7 @@
 	UnregisterSignal(M, COMSIG_LIVING_RESIST)
 	UnregisterSignal(owner, COMSIG_MOVABLE_HEAR)
 	REMOVE_TRAIT(owner, TRAIT_PACIFISM, "MKUltra")
-	to_chat(owner, "<span class='big redtext'><i>You're now free of [master]'s influence, and fully independent!'</i></span>")
+	to_chat(owner, "<span class='big redtext'><i>You're now free of [master]'s influence, and fully independent!</i></span>")
 	UnregisterSignal(owner, COMSIG_GLOB_LIVING_SAY_SPECIAL)
 	if(isLewd) //if we disabled it on apply.
 		M.client?.prefs.lewdchem = TRUE
