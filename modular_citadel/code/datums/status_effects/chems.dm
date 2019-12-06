@@ -304,7 +304,7 @@
 	var/mob/living/carbon/M = owner
 
 	//chem calculations
-	if(status_source = MKULTRA_CHEM)
+	if(status_source == MKULTRA_CHEM) //If it's from then, and only then, does it care for the presence of the chem.
 		if(!owner.reagents.has_reagent("enthrall") && !owner.reagents.has_reagent("enthrallTest"))
 			if (phase < 3 && phase != 0)
 				deltaResist += 3//If you've no chem, then you break out quickly
