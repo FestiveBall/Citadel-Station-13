@@ -228,7 +228,7 @@
 /datum/status_effect/chem/enthrall/on_creation(mob/living/carbon/thrall, source, mob/living/carbon/enthraller)
 	.=..()
 	status_source = source
-	var/mob/living/carbon/human/H = thrall
+	var/mob/living/carbon/H = thrall
 	if(!H)
 		H = owner
 	//If they have arousal off
@@ -242,18 +242,19 @@
 			//find the chem and rip the vars
 			var/datum/reagent/fermi/enthrall/E = locate(/datum/reagent/fermi/enthrall) in H.reagents.reagent_list
 			if(!E)
-				message_admins("WARNING: FermiChem: No master found in thrall, did you bus in the status? You need to set up the vars manually in the chem if it's not reacted/bussed. Someone set up the reaction/status proc incorrectly if not (Don't use donor blood). Console them with a chemcat plush maybe?")
+				log_game("WARNING: FermiChem: No master found in thrall, for chem application. Unable to create status.")
 				owner.remove_status_effect(src)
 				return FALSE
 			enthrallID = E.creatorID
 			enthrallGender = E.creatorGender
 			master = get_mob_by_key(enthrallID)
+			welcome_message(H)
 			return TRUE
 
 		//from Vampires
 		if(MKULTRA_VAMP)
 			if(!enthraller)
-				message_admins("WARNING: MKUltra. No enthraller passed to vampiric status effect on call. Unable to create status.")
+				log_game("WARNING: MKUltra. No enthraller passed to vampiric status effect on call. Unable to create status.")
 				owner.remove_status_effect(src)
 				return FALSE
 			master = enthraller
@@ -267,7 +268,7 @@
 			if(H.client?.prefs.lewdchem)
 				H.client?.prefs.lewdchem = FALSE
 				isLewd = TRUE
-
+			welcome_message(H)
 			return TRUE
 
 	//If we're not from either, find anything applicable.
@@ -278,24 +279,31 @@
 			enthrallGender = "Mistress"
 		else
 			enthrallGender = "Master"
+		welcome_message(H)
 		return TRUE
 	var/datum/reagent/fermi/enthrall/E = locate(/datum/reagent/fermi/enthrall) in H.reagents.reagent_list
 	if(E)
 		enthrallID = E.creatorID
 		enthrallGender = E.creatorGender
 		master = get_mob_by_key(enthrallID)
+		welcome_message(H)
 		return TRUE
+
+	log_game("WARNING: MKUltra. No enthraller found! Unable to create status.")
+	to_chat(H, "Something went wrong with enthrall status application. Please contact a developer (or Fermis!) after the round has ended. Thanks!")
+	owner.remove_status_effect(src)
 	return FALSE
 
+/datum/status_effect/chem/enthrall/proc/welcome_message(mob/living/thrall)
+	to_chat(thrall, "<span class='[(owner.client?.prefs.lewdchem?"big velvet":"big warning")]'><b>You feel inexplicably drawn towards [master], their words having a demonstrable effect on you. It seems the closer you are to them, the stronger the effect is. However you aren't fully swayed yet and can resist their effects by repeatedly resisting as much as you can!</b></span>")
+	var/message = "[(owner.client?.prefs.lewdchem?"I am a good pet for [enthrallGender].":"[master] is a really inspirational person!")]"
+	SEND_SIGNAL(thrall, COMSIG_ADD_MOOD_EVENT, "enthrall", /datum/mood_event/enthrall, message)
 
 /datum/status_effect/chem/enthrall/on_apply()
 	var/mob/living/carbon/M = owner
 	RegisterSignal(owner, COMSIG_LIVING_RESIST, .proc/owner_resist) //Do resistance calc if resist is pressed#
 	RegisterSignal(owner, COMSIG_MOVABLE_HEAR, .proc/owner_hear)
 	mental_capacity = 500 - M.getOrganLoss(ORGAN_SLOT_BRAIN)//It's their brain!
-	var/message = "[(owner.client?.prefs.lewdchem?"I am a good pet for [enthrallGender].":"[master] is a really inspirational person!")]"
-	SEND_SIGNAL(M, COMSIG_ADD_MOOD_EVENT, "enthrall", /datum/mood_event/enthrall, message)
-	to_chat(owner, "<span class='[(owner.client?.prefs.lewdchem?"big velvet":"big warning")]'><b>You feel inexplicably drawn towards [master], their words having a demonstrable effect on you. It seems the closer you are to them, the stronger the effect is. However you aren't fully swayed yet and can resist their effects by repeatedly resisting as much as you can!</b></span>")
 	log_game("FERMICHEM: MKULTRA: Status applied on [owner] ckey: [owner.key] with a master of [master] ckey: [enthrallID].")
 	SSblackbox.record_feedback("tally", "fermi_chem", 1, "Enthrall attempts")
 	return ..()
